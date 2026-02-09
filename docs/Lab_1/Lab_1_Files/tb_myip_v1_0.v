@@ -46,9 +46,10 @@ module tb_myip_v1_0(
                 .M_AXIS_TREADY(M_AXIS_TREADY)
 	);
 	
-	localparam NUMBER_OF_INPUT_WORDS  = 4;  // length of an input vector
-	localparam NUMBER_OF_OUTPUT_WORDS  = 4;  // length of an input vector
-	localparam NUMBER_OF_TEST_VECTORS  = 2;  // number of such test vectors (cases)
+    localparam NUMBER_OF_INPUT_WORDS   = 12; // 8(A)+4(B)
+    localparam NUMBER_OF_OUTPUT_WORDS  = 2;  // 2(RES)
+    localparam NUMBER_OF_TEST_VECTORS  = 2;
+
 	localparam width  = 8;  // width of an input vector
            
 	reg [width-1:0] test_input_memory [0:NUMBER_OF_TEST_VECTORS*NUMBER_OF_INPUT_WORDS-1]; // 4 inputs * 2
@@ -105,20 +106,28 @@ module tb_myip_v1_0(
 					
 				/// Output
 				// Note: result_memory is not written at a clock edge, which is fine as it is just a testbench construct and not actual hardware
-					word_cnt = 0;
-					M_AXIS_TREADY = 1'b1;	// we are now ready to receive data
-					while(M_AXIS_TLAST | ~M_AXIS_TLAST_prev) // receive data until the falling edge of M_AXIS_TLAST
-					begin
-						if(M_AXIS_TVALID)
-						begin
-							result_memory[word_cnt+test_case_cnt*NUMBER_OF_OUTPUT_WORDS] = M_AXIS_TDATA;
-							word_cnt = word_cnt+1;
-						end
-						#100;
-					end						// receive loop
-					M_AXIS_TREADY = 1'b0;	// not ready to receive data from the co-processor anymore.				
+                word_cnt = 0;
+                M_AXIS_TREADY = 1'b1;
+                
+                while(word_cnt < NUMBER_OF_OUTPUT_WORDS) begin
+                    if(M_AXIS_TVALID && M_AXIS_TREADY) begin
+                        result_memory[word_cnt+test_case_cnt*NUMBER_OF_OUTPUT_WORDS] = M_AXIS_TDATA[7:0];
+                        $display("OUT tc=%0d beat=%0d data=%08h last=%0b t=%0t",
+                                  test_case_cnt, word_cnt, M_AXIS_TDATA, M_AXIS_TLAST, $time);
+                        word_cnt = word_cnt + 1;
+                    end
+                    #100;
+                end
+                
+                M_AXIS_TREADY = 1'b0;
+	// not ready to receive data from the co-processor anymore.				
 				end							// next test vector
-				
+				$display("---- Dump ----");
+                for(word_cnt=0; word_cnt < NUMBER_OF_TEST_VECTORS*NUMBER_OF_OUTPUT_WORDS; word_cnt=word_cnt+1) begin
+                    $display("i=%0d  got=%02h  exp=%02h", word_cnt, result_memory[word_cnt], test_result_expected_memory[word_cnt]);
+                end
+                $display("-------------");
+
 				// checking correctness of results
 				for(word_cnt=0; word_cnt < NUMBER_OF_TEST_VECTORS*NUMBER_OF_OUTPUT_WORDS; word_cnt=word_cnt+1)
 						success = success & (result_memory[word_cnt] == test_result_expected_memory[word_cnt]);

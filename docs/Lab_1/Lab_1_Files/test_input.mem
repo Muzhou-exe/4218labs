@@ -1,10 +1,32 @@
-//first input vector
+// --- Test Case 1 (ºÚµ•≤‚ ‘) ---
+// Matrix A (Row 0: 1,1,1,1)
+01
+01
+01
+01
+// Matrix A (Row 1: 2,2,2,2)
+02
+02
+02
+02
+// Matrix B (Col 0: 1,1,1,1)
+01
+01
+01
+01
+// --- Test Case 2 (∏¥‘”≤‚ ‘) ---
+// Matrix A (Row 0: 1,2,3,4)
 01
 02
 03
 04
-//second input vector
-02
-03
-04
+// Matrix A (Row 1: 5,0,1,2)
 05
+00
+01
+02
+// Matrix B (Col 0: 2,1,0,2)
+02
+01
+00
+02
